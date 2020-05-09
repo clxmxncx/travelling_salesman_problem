@@ -25,6 +25,7 @@ temps polynomial.
 
 On teste toutes les permutations pour obtenir tous les chemins hamiltoniens,
 et on choisit le ou l'un des chemins de poids minimal.
+Sur corei5 3320M, 8go RAM, ubuntu 18.04, en python, pour n = 12, environ 3min 
 
 **python**: tsp.py
 

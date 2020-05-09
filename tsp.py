@@ -56,7 +56,7 @@ def tsp_force_brute(g, progress_bar=False):
     donc deux fois trop de cycles hamiltoniens (chaque cycle apparaît deux fois,
     une fois par sens de parcours)
     '''
-    pp = list(itertools.permutations(range(1, len(g))))
+    pp = itertools.permutations(range(1, len(g)))
     poids_min = math.inf
     meilleur_ch = (0,)
     if progress_bar:
