@@ -42,9 +42,30 @@ $ ocamlopt -o tsp.native tsp.ml && ./tsp.native
 
 <br>
 
-** EN COURS : **
-
 ## backtracking (solution exacte)
+
+Semblable à la force brute (on teste toutes les solutions). Différence :
+lorsqu'on teste un nouveau cycle hamiltonien, on s'arrête dès que son
+poids dépasse le poids du meilleur cycle déjà calculé.
+
+
+statistiques sur 100 graphes aléatoires de taille n = 12:
+(fonction stats_sur_backtrack)
+
+```
+count    100.000000
+mean       1.082935
+std        0.935841
+min        0.130260
+25%        0.453884
+50%        0.762216
+75%        1.400667
+max        5.067200
+```
+
+<br>
+
+**EN COURS :**
 
 ## arbre couvrant de poids minimal, algorithme de Prim (approximation de la solution)
 
