@@ -139,6 +139,124 @@ let tsp g =
 
 (*----------------------------------------------------------------------------*)
 
+(* FORCE BRUTE - 2eme version *)
+(* construction du stream de permutations *)
+type direction = G | D
+
+let initialiser_directions a =
+  Array.map (fun x -> (x, G)) a
+
+let echanger a i j =
+  let tempo = a.(i) in
+  a.(i) <- a.(j);
+  a.(j) <- tempo
+
+let peut_bouger a i = match a.(i) with
+  | (x, d) when d = G ->
+            if i > 0 && x > (fst a.(i - 1)) then true else false
+  | (x, d) when d = D ->
+            let n = Array.length a in
+            if i < n - 1 && x > (fst a.(i + 1)) then true else false
+  | _                 -> failwith "(peut_bouger) erreur"
+
+let bouger a i =
+  let (x, d) = a.(i) in
+  if peut_bouger a i then
+    match d with
+      | G -> echanger a i (i - 1)
+      | D -> echanger a i (i + 1)
+    else
+      failwith "impossible d'effectuer le déplacement"
+
+let trouver_plus_grand_a_bouger a =
+  let rec aux acc i =
+    let n = Array.length a in
+    if i >= n then acc
+    else if not (peut_bouger a i) then aux acc (i+1)
+    else
+      let x, _ = a.(i) in
+      match acc with
+        | None    -> aux (Some i) (i+1)
+        | Some j  -> let new_acc = if x < fst a.(j) then acc else Some i in
+                     aux new_acc (i+1)
+    in
+    aux None 0
+
+let changer_direction d = match d with
+  | G -> D
+  | D -> G
+
+let changer_direction_plus_grand x a =
+  Array.iteri
+    (fun i (y, d) -> if y > x then a.(i) <- (y, changer_direction d))
+    a
+
+let generateur_permutations l =
+  let a = Array.of_list l |> initialiser_directions in
+  let r = ref (Some l) in
+  let next () =
+    let p = !r in
+      begin
+        match trouver_plus_grand_a_bouger a with
+          | None    -> r := None
+          | Some i  ->
+              let x, d = a.(i) in
+                begin
+                  bouger a i ;
+                  changer_direction_plus_grand x a;
+                  r := Some (Array.map fst a |> Array.to_list)
+                end
+      end;
+      p
+    in
+    next
+
+let permutations_stream l =
+  let gen = generateur_permutations l in
+  Stream.from (fun _ -> gen ())
+
+
+let tester_permutations_stream l =
+  let perm_stream = permutations_stream l in
+  try
+    while true do
+      print_liste (Stream.next perm_stream);
+      print_string "\n"
+    done
+  with Stdlib.Stream.Failure ->
+    print_string "-> fin du stream\n\n"
+(*----------------------------------------------------------------------------*)
+
+
+(*----------------------------------------------------------------------------*)
+(* force brute, utilisant ce stream *)
+(* attention: toutes les permutations doivent commencer par 0 *)
+let tsp_force_brute g =
+  let n = Array.length g in
+  let l = List.tl (List.init n (fun x -> x)) in (* liste [1; 2; ...; n-1]*)
+  let perm_stream = permutations_stream l in
+  let poids = ref max_int and ch = ref [] in
+    begin
+      try
+        while true do
+          let c = Stream.next perm_stream in
+          let ch_x = 0 :: c in  (* tous les cycles commencent par 0 *)
+          let poids_x = poids_ch g ch_x in
+            if poids_x < !poids then
+              begin
+                poids := poids_x;
+                ch := ch_x
+              end
+        done
+      with
+      | Stdlib.Stream.Failure -> () (* fin du Stream : sortie normale *)
+      | _                     -> failwith "exception inconnue"
+    end;
+    !ch
+(*----------------------------------------------------------------------------*)
+
+
+
 
 (*----------------------------------------------------------------------------*)
 
@@ -164,4 +282,14 @@ let () =
   print_string "Poids du cycle: ";
   print_int (poids_ch g3 c);
   print_newline ();
+  print_newline ()
+
+let () =
+  let c = tsp_force_brute g3 in
+  print_string "Force brute, deuxième version, solution exacte\n";
+  print_liste c ;
   print_newline ();
+  print_string "Poids du cycle: ";
+  print_int (poids_ch g3 c);
+  print_newline ();
+  print_newline ()

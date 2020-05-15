@@ -23,23 +23,83 @@ temps polynomial.
 
 ## force brute (solution exacte)
 
-On teste toutes les permutations pour obtenir tous les chemins hamiltoniens,
+On teste toutes le permutations pour obtenir tous les chemins hamiltoniens,
 et on choisit le ou l'un des chemins de poids minimal.
-Sur corei5 3320M, 8go RAM, ubuntu 18.04, en python, pour n = 12, environ 3min 
 
-**python**: tsp.py
 
 **OCaml**: tsp.ml
 
-compilation et exécution pour OCaml
+compilation et exécution
 
 ```
-$ ocamlc -o tsp.native tsp.ml && ./tsp.native
+$ ocamlc -o fichier.native fichier.ml && ./fichier.native
 ```
 ou
 ```
-$ ocamlopt -o tsp.native tsp.ml && ./tsp.native
+$ ocamlopt -o fichier.native fichier.ml && ./fichier.native
 ```
+
+Deux versions:
+
+- la première, fonction `tsp`, utilise une liste complète des permutations
+générée à l'avance par la fonction `permutations` (solution du livre
+Option Informatique, MPSI MP/MP*). La taille de la liste évolue donc comme
+n!
+Sur un ordinateur corei5 3320M, 8go RAM, ubuntu 18.04 on a
+
+```
+utop # permutations 10;;
+Stack overflow during evaluation (looping recursion?).
+```
+
+- deuxième version, fonction `tsp_force_brute`: les permutations sont générées
+l'une après l'autre suivant l'algorithme de Steinhauss-Johnson-Trotter,
+et ce générateur est enveloppé par un Stream OCaml.
+
+Sources:
+- [http://typeocaml.com/2015/05/05/permutation/](http://typeocaml.com/2015/05/05/permutation/)
+- [https://www.topcoder.com/generating-permutations/](https://www.topcoder.com/generating-permutations/)
+- [https://fr.qwe.wiki/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm](https://fr.qwe.wiki/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm)
+
+
+exemple, sur un graphe aléatoire de taille n = 12
+
+```
+➜  traveling_salesman ocamlopt -o tsp.native unix.cmxa tsp.ml && ./tsp.native
+
+graphe de taille : 12
+
+0	5	20	2	24	13	15	28	17	34	43	20
+5	0	22	41	7	5	39	34	43	39	6	34
+20	22	0	44	9	20	18	40	33	11	5	29
+2	41	44	0	1	31	12	6	45	32	27	41
+24	7	9	1	0	6	2	5	4	27	20	1
+13	5	20	31	6	0	30	41	2	27	15	32
+15	39	18	12	2	30	0	14	11	24	12	12
+28	34	40	6	5	41	14	0	8	16	36	14
+17	43	33	45	4	2	11	8	0	45	5	33
+34	39	11	32	27	27	24	16	45	0	23	43
+43	6	5	27	20	15	12	36	5	23	0	18
+20	34	29	41	1	32	12	14	33	43	18	0
+
+
+0 - 1 - 5 - 8 - 10 - 2 - 9 - 7 - 6 - 11 - 4 - 3 -
+poids: 79
+temps d'exécution: 27.63663
+
+```
+
+
+**python**: tsp.py
+
+pour avoir un itérateur sur les permutations, on utilise ici dans
+`tsp_force_brute` une fonction de la bibliothèque standard
+
+```python
+pp = itertools.permutations(range(1, len(g)))
+```
+
+Fonctionne aussi sans stream avec la fonction récursive `tsp_force_brute_rec`
 
 <br>
 
@@ -64,16 +124,19 @@ min        0.130260
 max        5.067200
 ```
 
+
+
+
 <br>
 
-**EN COURS :**
+## EN COURS :
 
-## arbre couvrant de poids minimal, algorithme de Prim (approximation de la solution)
+#### arbre couvrant de poids minimal, algorithme de Prim (approximation de la solution)
 
-## Prim accéléré en utilisant la structure de tas   (approximation de la solution)
+#### Prim accéléré en utilisant la structure de tas   (approximation de la solution)
 
-## programmation dynamique
+#### programmation dynamique
 
-## algorithmes randomisés
+#### algorithmes randomisés
 
-## état de l'art
+#### état de l'art
