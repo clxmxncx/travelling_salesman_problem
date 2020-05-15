@@ -126,12 +126,15 @@ max        5.067200
 
 
 
+## arbre couvrant de poids minimal, algorithme de Prim (approximation de la solution)
+
+Utilisable si la fonction poids vérifie l'inégalité triangulaire.
+
+**OCaml :** tsp.ml
 
 <br>
 
 ## EN COURS :
-
-#### arbre couvrant de poids minimal, algorithme de Prim (approximation de la solution)
 
 #### Prim accéléré en utilisant la structure de tas   (approximation de la solution)
 

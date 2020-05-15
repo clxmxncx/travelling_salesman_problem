@@ -47,7 +47,7 @@ let dist_eucl (i, j) (k, l) =
   sqrt( (float_of_int (k - i))**2.0 +. (float_of_int (l - j))**2.0)
 
 (* b: valeur limite abscisse/ordonnée *)
-let creer_liste_points n b =
+let creer_liste_points_triang n b =
   Random.self_init ();
   let rec aux acc k = match k with
     | k when k = n  -> acc
@@ -256,6 +256,87 @@ let tsp_force_brute g =
 (*----------------------------------------------------------------------------*)
 
 
+(*----------------------------------------------------------------------------*)
+(* approximation possible quand fonction poids vérifie l'inégalité triangulaire *)
+(* dérivé de l'algorithme de Prim, implémentation directe *)
+(* Carré/Mansuy; Tim Roughgarden *)
+
+
+(* arbre couvrant de poids minimal, algorithme de Prim *)
+(* X: sommets inclus dans l'arbre couvrant *)
+(* en sortie: un arbre (non pondéré) sous forme de matrice d'adjacence *)
+let acm_prim g =
+  let n = Array.length g in
+  let m = Array.make_matrix n n false in   (* arbre couvrant (sans les poids)*)
+  let x = Array.make n false in            (* sommets de l'arbre couvrant *)
+  x.(0) <- true;  (* on prend le premier sommet comme racine de l'arbre *)
+  for k = 1 to n - 1 do (*on rajoute un sommet à chaque tour de boucle, donc n-1 tours de boucle*)
+    (* choisir parmi toutes les aretes ayant une extrémité dans X, l'autre dans V-X
+    celle de poids minimal (V : ensemble de tous les sommets)  *)
+    let p = ref max_int and imin = ref (-1) and jmin = ref (-1) in
+    for i = 0 to n - 1 do
+      for j = 0 to n - 1 do
+        if x.(i) && not x.(j) then
+          begin
+            if g.(i).(j) < !p then
+              begin
+                p := g.(i).(j);
+                imin := i;
+                jmin := j
+              end
+          end
+      done;
+    done;
+    x.(!jmin) <- true;
+    m.(!imin).(!jmin) <- true;
+    m.(!jmin).(!imin) <- true
+  done;
+  m
+
+
+
+(* graphe: poids vérifient l'inégalité triangulaire *)
+(* let g = points_to_graphe (creer_liste_points_triang 10 15)
+let m = acm_prim g *)
+
+(* let g_test = [|[|0; 5; 7; 2|]; [|5; 0; 7; 6|]; [|7; 7; 0; 6|]; [|2; 6; 6; 0|]|]
+let m = acm_prim g_test *)
+
+(* graphe: conversion de matrice d'ajacence à liste d'adjacence *)
+(* gm: graphe sous forme de matrice d'adjacence (tableau de tableaux) de booléens*)
+(* gl: graphe sous forme de liste d'adjacence (tableau de listes)*)
+let conversion_matrice_liste gm =
+  let n = Array.length gm in
+  let gl = Array.make n [] in
+  for i = 0 to n-2 do
+    for j = i+1 to n-1 do (* la matrice est symétrique; le triangle supérieur suffit*)
+        if gm.(i).(j) then
+          begin
+            gl.(i) <- j :: gl.(i);
+            gl.(j) <- i :: gl.(j)
+          end
+    done
+  done;
+  gl
+
+
+(* acm_gl: arbre sous forme de liste d'adjacence *)
+(* renvoie un cycle hamiltonien à partir de l'arbre couvrant minimal *)
+let acm_to_cycle_hamiltonien acm_gl =
+  let n = Array.length acm_gl in
+  let ch = ref [] in
+  let vus = Array.make n false in
+  vus.(0) <- true;
+  let rec aux li = match li with
+    | [] -> List.rev !ch
+    | x :: q -> ch := x :: !ch; aux (voisins acm_gl.(x) @ q)
+  and voisins li = match li with
+    | [] -> []
+    | y :: q when vus.(y) -> voisins q
+    | y :: q -> vus.(y) <- true; y :: voisins q
+  in
+  aux [0]
+(*----------------------------------------------------------------------------*)
 
 
 (*----------------------------------------------------------------------------*)
@@ -272,7 +353,7 @@ let g2 = [| [|0;1;4;2|];
             [|2;3;5;0|]  |]
 
 
-let g3 = points_to_graphe (creer_liste_points 9 1000)
+let g3 = points_to_graphe (creer_liste_points_triang 9 1000)
 
 let () =
   let c = tsp g3 in
@@ -293,3 +374,11 @@ let () =
   print_int (poids_ch g3 c);
   print_newline ();
   print_newline ()
+
+let () =
+  let acm_gm = acm_prim g3 in
+  let acm_gl = conversion_matrice_liste acm_gm in
+  let ch = acm_to_cycle_hamiltonien acm_gl in
+  print_string "Approximation avec l'algorithme de Prim\n";
+  print_liste ch;
+  Printf.printf "\npoids (prim): %d\n" (poids_ch g3 ch)
