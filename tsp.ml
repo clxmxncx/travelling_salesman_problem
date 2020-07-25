@@ -47,7 +47,7 @@ let dist_eucl (i, j) (k, l) =
   sqrt( (float_of_int (k - i))**2.0 +. (float_of_int (l - j))**2.0)
 
 (* b: valeur limite abscisse/ordonnée *)
-let creer_liste_points_triang n b =
+let creer_liste_points n b =
   Random.self_init ();
   let rec aux acc k = match k with
     | k when k = n  -> acc
@@ -57,7 +57,7 @@ let creer_liste_points_triang n b =
   in
   aux [] 0
 
-let points_to_graphe l =
+let points_to_graphe_eucl l =
   let n = List.length l in
   let t = Array.of_list l in
   let m = Array.make_matrix n n max_int in
@@ -341,6 +341,121 @@ let acm_to_cycle_hamiltonien acm_gl =
 
 (*----------------------------------------------------------------------------*)
 
+(* force brute, version récursive *)
+(*
+https://www.win.tue.nl/~kbuchin/teaching/2IL15/backtracking.pdf:
+pseudo code  Algorithm TSP BruteForce2 (A, ℓ, lengthSoFar )
+modifié: poids ET chemin hamiltonien
+*)
+
+
+(* permuter deux elements d'un tableau,
+connaissant les indices des éléments à permuter.
+Permutation "en place" *)
+let permuter t i j =
+  let tempo = ref t.(i) in
+    t.(i) <- t.(j);
+    t.(j) <- !tempo
+
+let tsp_force_brute_rec g =
+  let n = Array.length g in
+  let s = Array.init n (fun i -> i) in (* sommets *)
+
+  let rec aux g s l poids_en_cours =
+    (* s: 0..l : sommets visités
+       s: l+1..n-1: sommets non visités *)
+    match l with
+    | l when l = n -1 -> (* tous les sommets ont été visités *)
+          let poids = (poids_en_cours + g.(s.(l)).(s.(0))) in
+          let ch = Array.to_list s in
+          poids, ch
+    | _               ->
+          (* on commence par prendre s.(l+1) comme sommet suivant du cycle *)
+          let nouveau_poids = ref (poids_en_cours + g.(s.(l)).(s.(l+1))) in
+          let poids_min_rec = ref max_int and ch_rec = ref [] and poids_min = ref max_int
+              and ch = ref [] in
+          let (pmr, cr) = aux g s (l+1) !nouveau_poids in
+          poids_min_rec := pmr;
+          poids_min := pmr; (* un seul cas testé: c'est donc le minimum*)
+          ch_rec := cr;
+          ch := cr;
+          (* puis on teste les autres sommets possibles comme sommet suivant *)
+          for i = l+2 to n-1 do
+            permuter s (l+1) i; (* le sommet suivant est maintenant celui qui avait l'indice i *)
+            nouveau_poids := poids_en_cours + g.(s.(l)).(s.(l+1));
+            let (pmr2, chr2) = aux g s (l+1) !nouveau_poids in
+            poids_min_rec := pmr2;
+            ch_rec := chr2;
+            if poids_min_rec < poids_min then
+              begin
+                poids_min := !poids_min_rec;
+                ch := !ch_rec
+              end;
+            permuter s (l+1) i (* annulation de la permutation précédente *)
+          done;
+          !poids_min, !ch
+  in
+  aux g s 0 0
+(*----------------------------------------------------------------------------*)
+
+
+(*----------------------------------------------------------------------------*)
+
+(* backtracking, en modifiant force brute 3eme version, version récursive *)
+
+
+let tsp_backtrack g =
+  let n = Array.length g in
+  let s = Array.init n (fun i -> i) in (* sommets *)
+
+  let poids_min_en_cours = ref max_int in
+
+  let rec aux g s l poids_en_cours =
+    (* s: 0..l : sommets visités
+       s: l+1..n-1: sommets non visités *)
+    match l with
+    | l when l = n -1 -> (* tous les sommets ont été visités *)
+
+          let poids = poids_en_cours + g.(s.(n-1)).(s.(0)) in
+          poids_min_en_cours := min poids !poids_min_en_cours;
+          let ch_fin = Array.to_list s in poids, ch_fin
+
+    | _               ->
+          let nouveau_poids = ref(poids_en_cours + g.(s.(l)).(s.(l+1))) in
+          let ch = ref [] in
+          let poids_min = ref max_int in
+          if nouveau_poids < poids_min_en_cours then
+            begin
+              let (pmr, chr) = aux g s (l+1) !nouveau_poids in
+              poids_min := pmr;
+              ch := chr
+            end;
+          for i = l+2 to n-1 do
+            permuter s (l+1) i;
+            nouveau_poids := poids_en_cours + g.(s.(l)).(s.(l+1));
+            if nouveau_poids >= poids_min then
+              () (*pruning*)
+            else
+              begin
+                let (pmr,chr) = aux g s (l+1) !nouveau_poids in
+                if pmr < !poids_min then
+                  begin
+                    poids_min := pmr;
+                    ch := chr
+                  end;
+              end;
+            permuter s (l+1) i
+          done;
+          !poids_min, !ch
+  in
+  aux g s 0 0
+
+(*----------------------------------------------------------------------------*)
+
+(*----------------------------------------------------------------------------*)
+
+
+
 let g1 = [| [|0;2;4;3;9|];
             [|2;0;3;6;7|];
             [|4;3;0;6;6|];
@@ -353,7 +468,7 @@ let g2 = [| [|0;1;4;2|];
             [|2;3;5;0|]  |]
 
 
-let g3 = points_to_graphe (creer_liste_points_triang 9 1000)
+let g3 = points_to_graphe_eucl (creer_liste_points 5 1000)
 
 let () =
   let c = tsp g3 in
@@ -375,10 +490,33 @@ let () =
   print_newline ();
   print_newline ()
 
+
+
+let () =
+  let p, c = tsp_force_brute_rec g3 in
+  print_string "Force brute,troisième version (récursive), solution exacte\n";
+  print_liste c ;
+  print_newline ();
+  print_string "Poids du cycle: ";
+  print_int p;
+  print_newline ();
+  print_newline ()
+
+let () =
+  let p, c = tsp_backtrack g3 in
+  print_string "Force brute,quatrième version (récursive avec backtracking), solution exacte\n";
+  print_liste c ;
+  print_newline ();
+  print_string "Poids du cycle: ";
+  print_int p;
+  print_newline ();
+  print_newline ()
+
 let () =
   let acm_gm = acm_prim g3 in
   let acm_gl = conversion_matrice_liste acm_gm in
   let ch = acm_to_cycle_hamiltonien acm_gl in
   print_string "Approximation avec l'algorithme de Prim\n";
   print_liste ch;
-  Printf.printf "\npoids (prim): %d\n" (poids_ch g3 ch)
+  Printf.printf "\npoids (prim): %d\n" (poids_ch g3 ch);
+  print_newline ()
