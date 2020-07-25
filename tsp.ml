@@ -47,15 +47,23 @@ let dist_eucl (i, j) (k, l) =
   sqrt( (float_of_int (k - i))**2.0 +. (float_of_int (l - j))**2.0)
 
 (* b: valeur limite abscisse/ordonnée *)
+(* cette fonction peut devenir très lente si b est grand et si n est proche de b²*)
+exception Valeur_invalide
+
 let creer_liste_points n b =
-  Random.self_init ();
-  let rec aux acc k = match k with
-    | k when k = n  -> acc
-    | _             -> let i = Random.int b and j = Random.int b in
-                       if List.mem (i, j) acc then aux acc k
-                       else aux ((i,j) :: acc) (k+1)
-  in
-  aux [] 0
+  if n >= b*b then
+    raise Valeur_invalide
+  else
+    begin
+      Random.self_init ();
+      let rec aux acc k = match k with
+        | k when k = n  -> acc
+        | _             -> let i = Random.int b and j = Random.int b in
+                           if List.mem (i, j) acc then aux acc k
+                           else aux ((i,j) :: acc) (k+1)
+      in
+      aux [] 0
+    end
 
 let points_to_graphe_eucl l =
   let n = List.length l in
@@ -468,7 +476,7 @@ let g2 = [| [|0;1;4;2|];
             [|2;3;5;0|]  |]
 
 
-let g3 = points_to_graphe_eucl (creer_liste_points 5 1000)
+let g3 = points_to_graphe_eucl (creer_liste_points 9 1000)
 
 let () =
   let c = tsp g3 in
