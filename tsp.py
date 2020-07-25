@@ -128,6 +128,9 @@ def tsp_backtrack_aux(g, A, l, lengthSoFar, minCost):
     sortie:
     un cycle hamiltonien de poids minimal, commençant par le sommet 0
     remarque:
+    génération de toutes les permutations commençant par 0
+    donc deux fois trop de cycles hamiltoniens (chaque cycle apparaît deux fois,
+    une fois par sens de parcours)
     '''
     n = len(A)
     if l == n-1:
