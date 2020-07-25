@@ -65,7 +65,7 @@ Sources:
 exemple, sur un graphe aléatoire de taille n = 12
 
 ```
-➜  traveling_salesman ocamlopt -o tsp.native unix.cmxa tsp.ml && ./tsp.native
+➜ ocamlopt -o tsp.native unix.cmxa tsp.ml && ./tsp.native
 
 graphe de taille : 12
 
@@ -101,6 +101,27 @@ pp = itertools.permutations(range(1, len(g)))
 
 Fonctionne aussi sans stream avec la fonction récursive `tsp_force_brute_rec`
 
+Pour n = 12, temps d'exécution : 300 secs
+Pour n = 13 :
+```
+
+(force_brute) un graphe complet de taille 13:
+[[ 0. 76. 48. 42. 92. 84. 26. 52. 59.  4. 32. 86. 85.]
+ [76.  0. 15. 60. 22. 86. 40. 29. 42.  1. 60.  7. 89.]
+ [48. 15.  0. 31. 15. 43. 34. 96. 86. 83. 22. 60. 58.]
+ [42. 60. 31.  0. 86. 34. 53. 52. 35. 76. 46. 53. 87.]
+ [92. 22. 15. 86.  0. 93. 26. 67. 86. 13. 78. 35. 40.]
+ [84. 86. 43. 34. 93.  0.  4. 79.  2. 19. 11. 21. 22.]
+ [26. 40. 34. 53. 26.  4.  0. 45. 73.  8. 15. 21. 93.]
+ [52. 29. 96. 52. 67. 79. 45.  0. 23.  4. 40. 52. 41.]
+ [59. 42. 86. 35. 86.  2. 73. 23.  0. 71. 52. 19. 65.]
+ [ 4.  1. 83. 76. 13. 19.  8.  4. 71.  0. 95. 90. 97.]
+ [32. 60. 22. 46. 78. 11. 15. 40. 52. 95.  0. 17. 16.]
+ [86.  7. 60. 53. 35. 21. 21. 52. 19. 90. 17.  0.  3.]
+ [85. 89. 58. 87. 40. 22. 93. 41. 65. 97. 16.  3.  0.]]
+-> poids : 188.0; cycle: 0-3-2-4-1-11-12-10-6-5-8-7-9 (en 2563.222 seconde(s))
+
+```
 <br>
 
 ## backtracking (solution exacte)
@@ -131,15 +152,3 @@ max        5.067200
 Utilisable si la fonction poids vérifie l'inégalité triangulaire.
 
 **OCaml :** tsp.ml
-
-<br>
-
-## EN COURS :
-
-#### Prim accéléré en utilisant la structure de tas   (approximation de la solution)
-
-#### programmation dynamique
-
-#### algorithmes randomisés
-
-#### état de l'art
