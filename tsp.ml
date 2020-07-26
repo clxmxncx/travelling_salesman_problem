@@ -47,11 +47,12 @@ let dist_eucl (i, j) (k, l) =
   sqrt( (float_of_int (k - i))**2.0 +. (float_of_int (l - j))**2.0)
 
 (* b: valeur limite abscisse/ordonnée *)
-(* cette fonction peut devenir très lente si b est grand et si n est proche de b²*)
+(* cette fonction peut devenir très lente si b est grand et si n est proche de b²
+on peut limiter n à êre inferieur à 1/3 b² et donc 3n < b²*)
 exception Valeur_invalide
 
 let creer_liste_points n b =
-  if n >= b*b then
+  if 3 * n > b * b then
     raise Valeur_invalide
   else
     begin
