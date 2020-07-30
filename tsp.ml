@@ -150,6 +150,19 @@ let tsp g =
 
 (* FORCE BRUTE - 2eme version *)
 (* construction du stream de permutations *)
+
+(*
+Quelques références:
+
+- https://ocamlverse.github.io/content/iterators.html
+- http://typeocaml.com/2015/05/05/permutation/
+- https://ocaml.org/learn/tutorials/streams.html
+- http://rosettacode.org/wiki/Permutations#OCaml
+- https://stackoverflow.com/questions/20196133/the-ideal-way-to-write-permutation-function-in-ocaml
+- type option (Some None) cf apprendre à programmer avec OCaml p 104
+- https://dev.realworldocaml.org/variables-and-functions.html#prefix-and-infix-operators
+*)
+
 type direction = G | D
 
 let initialiser_directions a =
